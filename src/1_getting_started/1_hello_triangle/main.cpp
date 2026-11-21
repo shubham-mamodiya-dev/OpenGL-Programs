@@ -2,6 +2,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -33,18 +34,23 @@ constexpr std::string_view fragmentShadeSource = R"(
   };
 )";
 
+constexpr std::array<float, 9> vertices{-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
+                                        0.0f,  0.0f,  0.5f, 0.0f};
+
 class HelloTriangleApplication {
 public:
   void run() {
     this->initialize_glfw();
     this->createWindow();
     this->loadOpenGlFunctions();
+    this->createBuffers();
     this->mainloop();
     this->cleanup();
   }
 
 private:
   GLFWwindow *window = nullptr;
+  uint32_t VBO{0};
 
   void initialize_glfw() {
     if (!glfwInit()) {
@@ -70,6 +76,13 @@ private:
     if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
       throw std::runtime_error("Failed to initialize Glad.");
     }
+  }
+
+  void createBuffers() {
+    glGenBuffers(1, &this->VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(),
+                 GL_STATIC_DRAW);
   }
 
   void processInput() {
