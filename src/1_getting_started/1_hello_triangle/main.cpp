@@ -12,26 +12,28 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 
 constexpr uint32_t SCR_WIDTH{800};
 constexpr uint32_t SCR_HEIGHT{600};
-
+// Vertex shader
 constexpr std::string_view vertexShaderSource = R"(
-  #version 330 core 
+    #version 330 core
 
-  layout (location = 0) in vec3 aPos;
+    layout (location = 0) in vec3 aPos;
 
-  void main()
-  {
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-  };
+    void main()
+    {
+        gl_Position = vec4(aPos, 1.0);
+    }
 )";
 
-constexpr std::string_view fragmentShadeSource = R"(
-  #version 330 core
-  out vec4 FragColor;
+// Fragment shader
+constexpr std::string_view fragmentShaderSource = R"(
+    #version 330 core
 
-  void main() 
-  {
-    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-  };
+    out vec4 FragColor;
+
+    void main()
+    {
+        FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    }
 )";
 
 constexpr std::array<float, 9> vertices{-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
@@ -44,6 +46,7 @@ public:
     this->createWindow();
     this->loadOpenGlFunctions();
     this->createBuffers();
+    this->createShaderProgram();
     this->mainloop();
     this->cleanup();
   }
@@ -51,6 +54,10 @@ public:
 private:
   GLFWwindow *window = nullptr;
   uint32_t VBO{0};
+
+  uint32_t vertexShader{0};
+  uint32_t fragmentShader{0};
+  uint32_t shaderProgram{0};
 
   void initialize_glfw() {
     if (!glfwInit()) {
@@ -101,6 +108,67 @@ private:
       glfwSwapBuffers(this->window);
       glfwPollEvents();
     }
+  }
+
+  void createShaderProgram() {
+
+    vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+
+    fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+
+    shaderProgram = glCreateProgram();
+
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    int success{0};
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+
+    if (!success) {
+      std::array<char, 512> infoLog{};
+
+      glGetProgramInfoLog(shaderProgram, static_cast<GLsizei>(infoLog.size()),
+                          nullptr, infoLog.data());
+
+      throw std::runtime_error(infoLog.data());
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    vertexShader = 0;
+    fragmentShader = 0;
+  }
+
+  // Compile shader
+  GLuint compileShader(GLenum type, std::string_view source) {
+
+    GLuint shader = glCreateShader(type);
+
+    const char *shaderSource = source.data();
+
+    glShaderSource(shader, 1, &shaderSource, nullptr);
+
+    glCompileShader(shader);
+
+    GLint success{};
+
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+
+    if (!success) {
+
+      std::array<char, 512> infoLog{};
+
+      glGetShaderInfoLog(shader, static_cast<GLsizei>(infoLog.size()), nullptr,
+                         infoLog.data());
+
+      glDeleteShader(shader);
+
+      throw std::runtime_error(std::string_view{infoLog.data()}.data());
+    }
+
+    return shader;
   }
   void cleanup() {
     if (window) {
