@@ -1,6 +1,6 @@
 
-add_executable(hello_triangle
+add_executable(hello_window
   main.cpp
 )
 
-target_link_libraries(hello_triangle PRIVATE opengl_common)
+target_link_libraries(hello_window PRIVATE opengl_common)
