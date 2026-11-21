@@ -28,3 +28,4 @@ glad
 
 # Experiments
 add_subdirectory(src/1_getting_started/1_hello_window)
+add_subdirectory(src/1_getting_started/1_hello_triangle)
