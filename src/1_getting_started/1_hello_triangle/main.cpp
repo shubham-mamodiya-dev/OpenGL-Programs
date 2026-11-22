@@ -45,8 +45,8 @@ public:
     this->initialize_glfw();
     this->createWindow();
     this->loadOpenGlFunctions();
-    this->createBuffers();
     this->createShaderProgram();
+    this->createBuffers();
     this->mainloop();
     this->cleanup();
   }
@@ -54,6 +54,8 @@ public:
 private:
   GLFWwindow *window = nullptr;
   uint32_t VBO{0};
+  uint32_t VAO{0};
+  uint32_t EBO{0};
 
   uint32_t vertexShader{0};
   uint32_t fragmentShader{0};
@@ -86,10 +88,20 @@ private:
   }
 
   void createBuffers() {
-    glGenBuffers(1, &this->VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(),
                  GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
   }
 
   void processInput() {
@@ -105,6 +117,9 @@ private:
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT);
 
+      glUseProgram(shaderProgram);
+      glBindVertexArray(VAO);
+      glDrawArrays(GL_TRIANGLES, 0, 3);
       glfwSwapBuffers(this->window);
       glfwPollEvents();
     }
