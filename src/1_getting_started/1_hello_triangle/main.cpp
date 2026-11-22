@@ -36,8 +36,18 @@ constexpr std::string_view fragmentShaderSource = R"(
     }
 )";
 
-constexpr std::array<float, 9> vertices{-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
-                                        0.0f,  0.0f,  0.5f, 0.0f};
+constexpr std::array<float, 12> vertices{
+    0.5f,  0.5f,  0.0f, // top right
+    0.5f,  -0.5f, 0.0f, // bottom right
+    -0.5f, -0.5f, 0.0f, // bottom left
+    -0.5f, 0.5f,  0.0f  // top left
+};
+;
+
+constexpr std::array<uint32_t, 6> indices{
+    0, 1, 3, // first triangle
+    1, 2, 3  // second triangle
+};
 
 class HelloTriangleApplication {
 public:
@@ -90,11 +100,16 @@ private:
   void createBuffers() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(),
+                 GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices.data(),
                  GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
@@ -119,7 +134,8 @@ private:
 
       glUseProgram(shaderProgram);
       glBindVertexArray(VAO);
-      glDrawArrays(GL_TRIANGLES, 0, 3);
+      // glDrawArrays(GL_TRIANGLES, 0, 3);
+      glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
       glfwSwapBuffers(this->window);
       glfwPollEvents();
     }
